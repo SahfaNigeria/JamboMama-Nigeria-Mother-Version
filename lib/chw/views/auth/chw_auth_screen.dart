@@ -1,7 +1,7 @@
-import 'package:community_health_workers/chw/views/landing_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:jambomama_nigeria/chw/views/landing_screen.dart';
 
 class CHW_Auth_Page extends StatelessWidget {
   const CHW_Auth_Page({super.key});

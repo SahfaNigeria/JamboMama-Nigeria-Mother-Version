@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class PregnantFeelingsForm extends StatelessWidget {
@@ -7,7 +9,7 @@ class PregnantFeelingsForm extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pregnant Feelings Form'),
+        title: Text('Pregnancy Feelings Form'),
       ),
       body: const FeelingsForm(),
     );
@@ -23,7 +25,7 @@ class FeelingsForm extends StatefulWidget {
 
 class _FeelingsFormState extends State<FeelingsForm> {
   final List<String> _questions = [
-    "How are you feeling today?",
+    "Are you feeling well today?",
     "Are you experiencing any discomfort?",
     "Do you feel tired or fatigued?",
     "Are you experiencing any mood swings?",
@@ -36,6 +38,7 @@ class _FeelingsFormState extends State<FeelingsForm> {
   ];
 
   final List<String> _responses = List.filled(10, '');
+  final List<bool> _isAnswered = List.filled(10, true);
 
   DateTime now = DateTime.now();
 
@@ -52,7 +55,7 @@ class _FeelingsFormState extends State<FeelingsForm> {
               children: [
                 const Center(
                   child: Text(
-                    'Hello! today is: ',
+                    'Today is: ',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
@@ -71,7 +74,9 @@ class _FeelingsFormState extends State<FeelingsForm> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: Colors.grey, // Border color
+                      color: _isAnswered[i]
+                          ? Colors.grey
+                          : Colors.red, // Border color
                       width: 2.0, // Border width
                     ),
                     borderRadius:
@@ -88,6 +93,10 @@ class _FeelingsFormState extends State<FeelingsForm> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Colors.green.shade600, // background
+                            ),
                             onPressed: () {
                               _updateResponse(i, 'Yes');
                             },
@@ -99,6 +108,9 @@ class _FeelingsFormState extends State<FeelingsForm> {
                           ),
                           const SizedBox(width: 10),
                           ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red, // background
+                            ),
                             onPressed: () {
                               _updateResponse(i, 'No');
                             },
@@ -107,14 +119,19 @@ class _FeelingsFormState extends State<FeelingsForm> {
                                     color: Colors.white, fontSize: 14)),
                           ),
                           const SizedBox(width: 10),
-                          ElevatedButton(
-                            onPressed: () {
-                              _updateResponse(i, 'Same as before');
-                            },
-                            child: const Text(
-                              'Same as before',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 14),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue, // background
+                              ),
+                              onPressed: () {
+                                _updateResponse(i, 'Same as before');
+                              },
+                              child: const Text(
+                                'Same as before',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 13),
+                              ),
                             ),
                           ),
                         ],
@@ -134,6 +151,10 @@ class _FeelingsFormState extends State<FeelingsForm> {
               ],
             ],
           ),
+          ElevatedButton(
+            onPressed: _submitForm,
+            child: const Text('Submit'),
+          ),
         ],
       ),
     );
@@ -142,11 +163,101 @@ class _FeelingsFormState extends State<FeelingsForm> {
   void _updateResponse(int index, String response) {
     setState(() {
       _responses[index] = response;
+      _isAnswered[index] = true;
     });
   }
-}
+
+  void _submitForm() async {
+    bool isValid = true;
+    for (int i = 0; i < _responses.length; i++) {
+      if (_responses[i].isEmpty) {
+        setState(() {
+          _isAnswered[i] = false;
+        });
+        isValid = false;
+      }
+    }
+
+    if (!isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Please answer all questions before submitting.')),
+      );
+      return;
+    }
+
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        String userId = user.uid;
+
+        CollectionReference feelings = FirebaseFirestore.instance
+            .collection('Mother Pregnancy Data')
+            .doc(userId)
+            .collection('Mother Periodic Feelings Form');
+
+        await feelings.add({
+          'date':
+              '${now.year}-${_formatTwoDigits(now.month)}-${_formatTwoDigits(now.day)}',
+          'responses': _responses,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Form submitted successfully!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit form: $e')),
+      );
+    }
+  }
+
+//   void _submitForm() async {
+//     bool isValid = true;
+//     for (int i = 0; i < _responses.length; i++) {
+//       if (_responses[i].isEmpty) {
+//         setState(() {
+//           _isAnswered[i] = false;
+//         });
+//         isValid = false;
+//       }
+//     }
+
+//     if (!isValid) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//             content: Text('Please answer all questions before submitting.')),
+//       );
+//       return;
+//     }
+
+//     CollectionReference feelings =
+//         FirebaseFirestore.instance.collection('Mother feelings form');
+
+//     await feelings.add({
+//       'date':
+//           '${now.year}-${_formatTwoDigits(now.month)}-${_formatTwoDigits(now.day)}',
+//       'responses': _responses,
+//     }).then((value) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text('Form submitted successfully!')),
+//       );
+//     }).catchError((error) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('Failed to submit form: $error')),
+//       );
+//     });
+//   }
+// }
+
+  String _formatTwoDigits(int value) {
+    return value.toString().padLeft(2, '0');
+  }
 
 // Helper function to format single digit values with leading zero
-String _formatTwoDigits(int value) {
-  return value.toString().padLeft(2, '0');
 }

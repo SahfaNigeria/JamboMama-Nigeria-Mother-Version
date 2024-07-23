@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ExpectedDeliveryScreen extends StatefulWidget {
   const ExpectedDeliveryScreen({super.key});
@@ -20,6 +22,41 @@ class _ExpectedDeliveryScreenState extends State<ExpectedDeliveryScreen> {
     setState(() {
       _expectedDeliveryDate = expectedDeliveryDate.toString();
     });
+
+    // Call function to send data to Firestore
+    _sendDataToFirestore(_expectedDeliveryDate);
+  }
+
+  Future<void> _sendDataToFirestore(String expectedDeliveryDate) async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        String userId = user.uid;
+
+        CollectionReference deliveries = FirebaseFirestore.instance
+            .collection('Mother Pregnancy Data')
+            .doc(userId)
+            .collection('Expected Delivery Date');
+
+        await deliveries.add({
+          'expectedDeliveryDate': expectedDeliveryDate,
+          'timestamp': FieldValue
+              .serverTimestamp(), // Optional: include server timestamp
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Your Delivery Date is Saved')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit delivery date: $e')),
+      );
+    }
   }
 
   @override
@@ -36,7 +73,7 @@ class _ExpectedDeliveryScreenState extends State<ExpectedDeliveryScreen> {
             TextField(
               controller: _lmpController,
               decoration: const InputDecoration(
-                labelText: 'Enter Last Menstrual Period (YYYY-MM-DD)',
+                labelText: 'Enter Your Last Menstrual Period (YYYY-MM-DD)',
                 hintText: '2024-02-14',
               ),
               keyboardType: TextInputType.datetime,

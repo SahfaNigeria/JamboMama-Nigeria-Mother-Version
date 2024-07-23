@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:jambomama_nigeria/components/drawer_tiles.dart';
 import 'package:jambomama_nigeria/views/mothers/auth/login.dart';
 import 'package:jambomama_nigeria/views/mothers/deliverydate.dart';
+import 'package:jambomama_nigeria/views/mothers/match.dart';
 
 import 'package:jambomama_nigeria/views/mothers/medical_background.dart';
 
@@ -68,6 +69,20 @@ class _HomeDrawerState extends State<HomeDrawer> {
           ),
 
           DrawerTiles(
+            icon: Icons.chat_sharp,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ProfessionalsList(
+                          location: 'Onitcha Uku',
+                        )),
+              );
+            },
+            text: "Chats",
+          ),
+
+          DrawerTiles(
             icon: Icons.car_rental,
             onTap: () {
               Navigator.push(
@@ -82,11 +97,11 @@ class _HomeDrawerState extends State<HomeDrawer> {
           DrawerTiles(
             icon: Icons.app_registration,
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const MedicalBackgroundForm()),
-              );
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //       builder: (context) => const ),
+              // );
             },
             text: "Medical Background ",
           ),

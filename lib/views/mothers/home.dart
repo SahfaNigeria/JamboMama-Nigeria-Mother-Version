@@ -4,6 +4,7 @@ import 'package:jambomama_nigeria/components/banner_component.dart';
 import 'package:jambomama_nigeria/components/drawer.dart';
 import 'package:jambomama_nigeria/components/home_components.dart';
 import 'package:jambomama_nigeria/views/mothers/deliverydate.dart';
+import 'package:jambomama_nigeria/views/mothers/medical_background.dart';
 import 'package:jambomama_nigeria/views/mothers/questionnaire.dart';
 import 'package:jambomama_nigeria/views/mothers/warning.dart';
 import 'package:jambomama_nigeria/views/mothers/you.dart';
@@ -171,7 +172,8 @@ class _HomePageState extends State<HomePage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const You()),
+                      MaterialPageRoute(
+                          builder: (context) => PregnantWomanForm()),
                     );
                   },
                 ),
